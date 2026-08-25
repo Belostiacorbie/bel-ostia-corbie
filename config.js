@@ -1,8 +1,8 @@
-// BEL OSTIA V4
-// À remplir plus tard avec le gérant pour synchroniser stocks + vrai login admin.
-// Clé autorisée ici : clé ANON/PUBLISHABLE uniquement.
-// NE JAMAIS mettre de clé service_role dans GitHub.
+// BEL OSTIA V5
+// À remplir avec Supabase pour activer le vrai compte administrateur
+// et synchroniser les stocks entre tous les appareils.
+// Utiliser uniquement la clé publique ANON/PUBLISHABLE.
 window.BEL_OSTIA = {
-  supabaseUrl: "",
-  supabaseAnonKey: ""
+  supabaseUrl: "https://dhjijqfuosxuwcqdlbch.supabase.co",
+  supabaseAnonKey: "sb_publishable_o8KwZp7gzrUqLewKQNSovA_mLcF38hE"
 };

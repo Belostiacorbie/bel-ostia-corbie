@@ -1,105 +1,68 @@
 <!doctype html><html lang="fr"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bel Ostia Corbie — Commander</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#fff8ef;color:#181818}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#fff8ef;color:#181818}
 header{background:#151515;color:#fff;text-align:center;padding:18px;position:sticky;top:0;z-index:5}header b{font-size:30px}
-main{max-width:1120px;margin:auto;padding:18px 14px 115px}.hero{background:#a71928;color:#fff;border-radius:22px;padding:28px 22px}.hero h1{margin:0 0 8px}
-.chips{display:flex;gap:8px;overflow:auto;padding:16px 0}.chip{white-space:nowrap;background:#fff;border:1px solid #ded6cf;border-radius:999px;padding:10px 13px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:12px}.card{background:#fff;border:1px solid #eadfd5;border-radius:17px;padding:15px;display:flex;flex-direction:column}.card h3{margin:0 0 6px}.desc{font-size:13px;color:#70655c;min-height:34px}.price{font-weight:900;margin:9px 0}
+main{max-width:1120px;margin:auto;padding:18px 14px 110px}.hero{background:#a71928;color:white;border-radius:22px;padding:28px 22px}
+.chips{display:flex;gap:8px;overflow:auto;padding:16px 0}.chip{white-space:nowrap;background:#fff;border:1px solid #ddd;border-radius:999px;padding:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(225px,1fr));gap:12px}.card{background:white;border:1px solid #eadfd5;border-radius:16px;padding:15px;display:flex;flex-direction:column}
+.card h3{margin:0 0 6px}.desc{font-size:13px;color:#6e6259;min-height:34px}.price{font-weight:900;margin:8px 0}.stockok{font-size:12px;color:#387143}.stockno{font-size:12px;color:#a71928;font-weight:bold}
 select,input,textarea{width:100%;padding:11px;border:1px solid #d7ccc3;border-radius:10px;margin:7px 0;font-size:15px}
-button{border:0;border-radius:11px;padding:11px 13px;font-weight:800;cursor:pointer}.add,.pay{background:#a71928;color:#fff}.add{width:100%;margin-top:auto}.add:disabled{background:#aaa;cursor:not-allowed}
-.stockok{font-size:12px;color:#387143;margin:5px 0}.stockno{font-size:12px;color:#a71928;font-weight:bold;margin:5px 0}
-.cart{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#151515;color:white;border-radius:999px;padding:14px 20px;z-index:10;box-shadow:0 8px 30px #0004}
-.modal{display:none;position:fixed;inset:0;background:#0009;z-index:20;align-items:flex-end;justify-content:center}.sheet{background:#fff;width:min(720px,100%);max-height:92vh;overflow:auto;padding:20px;border-radius:22px 22px 0 0}.row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #eee;padding:10px 0}
-.notice{background:#fff0c7;padding:10px;border-radius:11px;font-size:13px;margin:14px 0}.admin{text-align:center;margin:35px 0}.admin a{font-size:12px;color:#777}
-.meatbox{border:1px solid #eee;border-radius:10px;padding:8px;margin:8px 0}.meatbox label{display:block;font-size:13px;margin:6px 0}.meatbox input{width:auto;margin-right:7px}
+button{border:0;border-radius:11px;padding:11px;font-weight:800;cursor:pointer}.add,.pay{background:#a71928;color:#fff}.add{width:100%;margin-top:auto}.add:disabled{background:#aaa}
+.cart{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:#151515;color:#fff;border-radius:999px;padding:14px 20px;z-index:10}
+.modal{display:none;position:fixed;inset:0;background:#0009;z-index:20;align-items:flex-end;justify-content:center}.sheet{background:#fff;width:min(720px,100%);max-height:92vh;overflow:auto;padding:20px;border-radius:22px 22px 0 0}
+.row{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #eee;padding:10px 0}.notice{background:#fff0c7;border-radius:10px;padding:10px;margin:14px 0;font-size:13px}
+.meatbox{border:1px solid #eee;border-radius:10px;padding:8px;margin:8px 0}.meatbox label{display:block;font-size:13px;margin:6px 0}.meatbox input{width:auto}
+.admin{text-align:center;margin-top:35px}.admin a{font-size:12px;color:#777}
 </style></head><body>
-<header><b>BEL OSTIA</b><div>Pizzeria • Corbie</div></header>
-<main><div class="hero"><h1>Commandez chez Bel Ostia 🍕</h1><div>À emporter ou livraison • 28 rue Faidherbe, 80800 Corbie</div></div>
-<div class="chips" id="chips"></div>
-<div class="notice" id="syncNotice"></div>
-<div id="menu"></div>
-<div class="admin"><a href="admin.html">Accès administration</a></div>
-</main>
+<header><b>BEL OSTIA</b><div>Pizzeria • Corbie</div></header><main>
+<div class="hero"><h1>Commandez chez Bel Ostia 🍕</h1><div>À emporter ou livraison • 28 rue Faidherbe, 80800 Corbie</div></div>
+<div class="chips" id="chips"></div><div class="notice" id="notice"></div><div id="menu"></div>
+<div class="admin"><a href="admin.html">Accès administration</a></div></main>
 <button class="cart" onclick="openCart()">🛒 <span id="count">0</span> • <span id="total">0,00 €</span></button>
-<div class="modal" id="modal"><div class="sheet">
-<div style="display:flex;justify-content:space-between;align-items:center"><h2>Votre panier</h2><button onclick="closeCart()">✕</button></div>
-<div id="items"></div><h3>Commande</h3>
-<select id="mode"><option>Livraison</option><option>À emporter</option></select>
-<input id="customerName" placeholder="Nom et prénom"><input id="phone" placeholder="Téléphone">
-<input id="address" placeholder="Adresse de livraison"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><input id="zip" value="80800"><input id="city" value="Corbie"></div>
-<textarea id="note" placeholder="Instructions / remarques"></textarea>
-<button class="pay" style="width:100%" onclick="checkout()">Continuer vers le paiement</button>
-<p style="font-size:12px;color:#777">Le paiement réel sera connecté avec le gérant.</p>
-</div></div>
-<script src="shared.js"></script>
-<script>
-let cart=[], stockRows=[];
-const cats=["Pizzas sauce tomate","Pizzas crème fraîche","Burgers","Sandwichs","Tacos","Paninis","Salades","Tex-Mex","Boissons","Desserts & glaces"];
+<div class="modal" id="modal"><div class="sheet"><div style="display:flex;justify-content:space-between"><h2>Panier</h2><button onclick="closeCart()">✕</button></div><div id="items"></div>
+<select id="mode"><option>Livraison</option><option>À emporter</option></select><input id="customerName" placeholder="Nom et prénom"><input id="phone" placeholder="Téléphone"><input id="address" placeholder="Adresse"><textarea id="note" placeholder="Instructions"></textarea><button class="pay" style="width:100%" onclick="checkout()">Continuer</button></div></div>
+<script src="shared.js"></script><script>
+let stock=[],cart=[];const cats=["Pizzas sauce tomate","Pizzas crème fraîche","Burgers","Sandwichs","Tacos","Paninis","Salades","Tex-Mex","Boissons","Desserts & glaces"];
 const slug=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-");
-
-async function boot(){
-  stockRows=await getStockRows();
-  syncNotice.textContent=connected
-    ?"Stocks synchronisés avec la base en ligne."
-    :"Mode aperçu : le stock est enregistré seulement sur cet appareil jusqu’à la connexion du vrai compte administrateur.";
-  render();
+async function boot(){stock=await getStockRows();notice.textContent=connected?"Stocks synchronisés en ligne.":"Mode aperçu local jusqu’à la connexion Supabase.";render();}
+function productAvailability(p,i){
+ if(p.sizes)return null;
+ return stock.find(x=>x.type==="menu"&&x.category===p.cat&&x.name===p.name);
 }
 function render(){
-  chips.innerHTML=cats.map(c=>`<button class="chip" onclick="document.getElementById('c-${slug(c)}').scrollIntoView({behavior:'smooth'})">${c}</button>`).join("");
-  let h="";
-  cats.forEach(c=>{
-    h+=`<section id="c-${slug(c)}"><h2>${c}</h2><div class="grid">`;
-    if(c==="Boissons"){
-      stockRows.filter(x=>x.type==="drink").forEach((x,i)=>{
-        const unavailable=!x.enabled||Number(x.stock)<=0;
-        h+=`<div class="card"><h3>${esc(x.name)}</h3><div class="desc">${esc(x.category)}</div><div class="${unavailable?'stockno':'stockok'}">${unavailable?'Rupture de stock':'Disponible'}</div><div class="price">${euro(x.price)}</div><button class="add" ${unavailable?'disabled':''} onclick='addDrink(${JSON.stringify(x.category)},${JSON.stringify(x.name)},${Number(x.price)})'>${unavailable?'Indisponible':'Ajouter'}</button></div>`;
-      });
-    } else {
-      MENU.filter(p=>p.cat===c).forEach(p=>{
-        const idx=MENU.indexOf(p);
-        let options="",price="";
-        if(p.sizes){
-          options=`<select id="size${idx}">${Object.entries(p.sizes).map(([k,v])=>`<option value="${esc(k)}|${v}">${esc(k)} — ${euro(v)}</option>`).join("")}</select>`;
-        } else if(p.meatCount){
-          const available=stockRows.filter(x=>x.type==="taco_meat"&&x.enabled&&Number(x.stock)>0);
-          options=`<div class="meatbox"><b>Choisissez ${p.meatCount} viande${p.meatCount>1?'s':''}</b>${available.map((x,j)=>`<label><input type="checkbox" class="meat-${idx}" value="${esc(x.name)}" onchange="limitMeats(${idx},${p.meatCount},this)"> ${esc(x.name)}</label>`).join("")}</div>`;
-          price=`<div class="price">${euro(p.price)}</div>`;
-        } else price=`<div class="price">${euro(p.price)}</div>`;
-        h+=`<div class="card"><h3>${esc(p.name)}</h3><div class="desc">${esc(p.desc)}</div>${options}${price}<button class="add" onclick="addMenu(${idx})">Ajouter</button></div>`;
-      });
-    }
-    h+="</div></section>";
-  });
-  menu.innerHTML=h;
+ chips.innerHTML=cats.map(c=>`<button class="chip" onclick="document.getElementById('c-${slug(c)}').scrollIntoView({behavior:'smooth'})">${c}</button>`).join("");
+ let h="";
+ cats.forEach(c=>{h+=`<section id="c-${slug(c)}"><h2>${c}</h2><div class="grid">`;
+ if(c==="Boissons"){
+   stock.filter(x=>x.type==="drink").forEach(x=>{const off=!x.enabled||x.stock<=0;h+=`<div class="card"><h3>${esc(x.name)}</h3><div class="desc">${esc(x.category)}</div><div class="${off?'stockno':'stockok'}">${off?'Rupture':'Disponible'}</div><button class="add" ${off?'disabled':''} onclick='addDrink(${JSON.stringify(x.category)},${JSON.stringify(x.name)})'>${off?'Indisponible':'Ajouter'}</button></div>`});
+ }else{
+   MENU.filter(p=>p.cat===c).forEach(p=>{const i=MENU.indexOf(p);let opts="",price="",disabled=false;
+     if(p.sizes){
+       const options=Object.entries(p.sizes).map(([s,v])=>{const st=stock.find(x=>x.type==="menu"&&x.category===p.cat&&x.name===`${p.name} — ${s}`);const off=!st||!st.enabled||st.stock<=0;return `<option value="${s}|${v}" ${off?'disabled':''}>${s} — ${euro(v)}${off?' — rupture':''}</option>`}).join("");
+       opts=`<select id="size${i}">${options}</select>`;
+     }else if(p.meatCount){
+       const prod=productAvailability(p,i);disabled=!prod||!prod.enabled||prod.stock<=0;
+       const meats=stock.filter(x=>x.type==="taco_meat"&&x.enabled&&x.stock>0);
+       opts=`<div class="meatbox"><b>Choisissez ${p.meatCount} viande${p.meatCount>1?'s':''}</b>${meats.map(x=>`<label><input type="checkbox" class="m${i}" value="${esc(x.name)}" onchange="limitM(${i},${p.meatCount},this)"> ${esc(x.name)}</label>`).join("")}</div>`;
+       price=`<div class="price">${euro(p.price)}</div>`;
+     }else{
+       const prod=productAvailability(p,i);disabled=!prod||!prod.enabled||prod.stock<=0;price=`<div class="price">${euro(p.price)}</div>`;
+     }
+     h+=`<div class="card"><h3>${esc(p.name)}</h3><div class="desc">${esc(p.desc)}</div>${opts}${price}<button class="add" ${disabled?'disabled':''} onclick="addMenu(${i})">${disabled?'Indisponible':'Ajouter'}</button></div>`;
+   });
+ } h+="</div></section>";});menu.innerHTML=h;
 }
-function limitMeats(idx,max,el){
-  const checked=[...document.querySelectorAll(".meat-"+idx+":checked")];
-  if(checked.length>max){el.checked=false;alert("Choisissez seulement "+max+" viande"+(max>1?"s":"")+".");}
-}
-function addDrink(category,name,price){cart.push({name,detail:category,price});update()}
-function addMenu(idx){
-  const p=MENU[idx];let price=p.price,detail="";
-  if(p.sizes){const [s,v]=document.getElementById("size"+idx).value.split("|");detail=s;price=+v;}
-  if(p.meatCount){
-    const selected=[...document.querySelectorAll(".meat-"+idx+":checked")].map(x=>x.value);
-    if(selected.length!==p.meatCount)return alert("Choisissez exactement "+p.meatCount+" viande"+(p.meatCount>1?"s":"")+".");
-    detail=selected.join(", ");
-  }
-  cart.push({name:p.name,detail,price});update();
-}
+function limitM(i,max,el){if(document.querySelectorAll(".m"+i+":checked").length>max){el.checked=false;alert("Maximum "+max+" viande(s).")}}
+function addDrink(cat,name){const x=stock.find(r=>r.type==="drink"&&r.category===cat&&r.name===name);if(!x||!x.enabled||x.stock<=0)return alert("Rupture.");const price=cat.includes("33")?1.5:3;cart.push({name,detail:cat,price});update()}
+function addMenu(i){const p=MENU[i];let price=p.price,detail="";
+ if(p.sizes){const el=document.getElementById("size"+i);if(!el||!el.value)return alert("Aucune taille disponible.");const [s,v]=el.value.split("|");detail=s;price=+v;}
+ if(p.meatCount){const m=[...document.querySelectorAll(".m"+i+":checked")].map(x=>x.value);if(m.length!==p.meatCount)return alert("Choisissez exactement "+p.meatCount+" viande(s).");detail=m.join(", ");}
+ cart.push({name:p.name,detail,price});update();}
 function update(){count.textContent=cart.length;total.textContent=euro(cart.reduce((s,x)=>s+x.price,0))}
 function openCart(){modal.style.display="flex";items.innerHTML=cart.length?cart.map((x,i)=>`<div class="row"><div><b>${esc(x.name)}</b><br><small>${esc(x.detail||"")}</small></div><div>${euro(x.price)} <button onclick="cart.splice(${i},1);update();openCart()">Retirer</button></div></div>`).join(""):"Panier vide"}
-function closeCart(){modal.style.display="none"}
-function checkout(){
-  if(!cart.length)return alert("Votre panier est vide.");
-  const t=cart.reduce((s,x)=>s+x.price,0);
-  if(t<15)return alert("Minimum de commande : 15 €.");
-  if(!customerName.value.trim()||!phone.value.trim())return alert("Renseignez votre nom et votre téléphone.");
-  alert("Le panier est prêt. Paiement et envoi automatique de la commande seront connectés avec le gérant.");
-}
+function closeCart(){modal.style.display="none"}function checkout(){if(!cart.length)return alert("Panier vide.");if(!customerName.value||!phone.value)return alert("Nom et téléphone requis.");alert("V5 prête. Paiement et décrémentation automatique du stock seront branchés ensuite.");}
 boot();update();
 </script></body></html>
