@@ -1,0 +1,40 @@
+<!doctype html><html lang="fr"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bel Ostia — Administration</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f5f5;color:#171717}main{max-width:1000px;margin:auto;padding:20px 14px}.panel{background:white;border:1px solid #ddd;border-radius:18px;padding:20px;margin-bottom:14px}input{width:100%;padding:11px;border:1px solid #ccc;border-radius:10px;margin:6px 0 12px}button{border:0;border-radius:10px;padding:10px 12px;font-weight:bold;cursor:pointer}.primary{background:#a71928;color:white}.dark{background:#171717;color:white}.row{display:grid;grid-template-columns:2fr 80px 70px 70px 120px;gap:8px;align-items:center;border-bottom:1px solid #eee;padding:10px 0}.zero{opacity:.5}.notice{background:#fff0c7;border-radius:10px;padding:10px;font-size:13px}.stock{font-weight:900}@media(max-width:700px){.row{grid-template-columns:1fr 65px 55px 55px 90px;font-size:13px}}</style></head><body><main>
+<div class="panel"><h1>Bel Ostia — Administration</h1><div class="notice" id="notice"></div></div>
+<div class="panel" id="login"><h2>Connexion administrateur</h2><input id="email" type="email" placeholder="E-mail"><input id="password" type="password" placeholder="Mot de passe"><button class="primary" onclick="signIn()">Se connecter</button><p style="font-size:12px;color:#777">Le vrai compte sécurisé sera actif une fois Supabase configuré. Le mode aperçu local ne doit pas être utilisé comme sécurité réelle.</p></div>
+<div class="panel" id="dashboard" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Gestion des stocks</h2><button class="dark" onclick="signOut()">Déconnexion</button></div><div id="stockList"></div></div>
+<script src="shared.js"></script><script>
+async function boot(){
+ notice.textContent=connected?"Mode sécurisé connecté : stocks partagés entre les appareils.":"MODE APERÇU LOCAL : stocks uniquement sur cet appareil. Pour un vrai compte admin et des stocks partagés, il faudra connecter Supabase.";
+ if(connected){const {data}=await sb.auth.getSession();if(data?.session)showDashboard();}
+}
+async function signIn(){
+ if(connected){
+   const {error}=await sb.auth.signInWithPassword({email:email.value,password:password.value});
+   if(error)return alert("Connexion impossible : "+error.message);
+   return showDashboard();
+ }
+ if(!email.value||!password.value)return alert("Entre un e-mail et un mot de passe pour voir la démonstration.");
+ sessionStorage.setItem("belostia_preview_admin","1");showDashboard();
+}
+async function signOut(){if(connected)await sb.auth.signOut();sessionStorage.removeItem("belostia_preview_admin");location.reload();}
+async function showDashboard(){login.style.display="none";dashboard.style.display="block";await renderStocks();}
+async function renderStocks(){
+ const rows=await getStockRows();
+ let h="",last="";
+ rows.forEach((x,i)=>{
+   if(x.category!==last){h+=`<h3>${esc(x.category)}</h3>`;last=x.category;}
+   h+=`<div class="row ${x.stock<=0?'zero':''}"><div><b>${esc(x.name)}</b><br><small>${x.type==='drink'?'Boisson':'Viande tacos'}</small></div><div class="stock">${x.stock}</div><button onclick='change(${JSON.stringify(x.type)},${JSON.stringify(x.category)},${JSON.stringify(x.name)},1)'>+1</button><button onclick='change(${JSON.stringify(x.type)},${JSON.stringify(x.category)},${JSON.stringify(x.name)},-1)'>-1</button><button onclick='zero(${JSON.stringify(x.type)},${JSON.stringify(x.category)},${JSON.stringify(x.name)})'>Rupture</button><div></div><input id="v${i}" type="number" min="0" value="${x.stock}"><button onclick='exact(${JSON.stringify(x.type)},${JSON.stringify(x.category)},${JSON.stringify(x.name)},document.getElementById("v${i}").value)'>OK</button></div>`;
+ });
+ stockList.innerHTML=h;
+}
+async function change(t,c,n,d){await adjustStock(t,c,n,d);await renderStocks()}
+async function zero(t,c,n){await setStock(t,c,n,0);await renderStocks()}
+async function exact(t,c,n,v){await setStock(t,c,n,v);await renderStocks()}
+boot();
+</script></body></html>
