@@ -11,7 +11,18 @@ function euro(n){return Number(n).toFixed(2).replace('.',',')+' €';}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function slug(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase();}
 function localRows(){let r=null;try{r=JSON.parse(localStorage.getItem('belostia_v7_stock')||'null')}catch(e){};if(!r){r=structuredClone(DEFAULT_STOCK);localStorage.setItem('belostia_v7_stock',JSON.stringify(r));}return r;}
-async function getStockRows(){if(sb){const {data,error}=await sb.from('stock_items').select('*').order('category').order('name');if(!error&&data&&data.length)return data;}return localRows();}
+async function getStockRows(){
+  try{
+    if(sb){
+      const {data,error}=await sb.from('stock_items').select('*').order('category').order('name');
+      if(!error && data){
+        const bySku=new Map((data||[]).map(x=>[x.sku,x]));
+        return DEFAULT_STOCK.map(d=>bySku.get(d.sku)||d).concat((data||[]).filter(x=>!DEFAULT_STOCK.some(d=>d.sku===x.sku)));
+      }
+    }
+  }catch(e){ console.error('Stock Supabase indisponible, fallback local',e); }
+  return localRows();
+}
 async function ensureCatalog(){if(!sb)return;const {data,error}=await sb.from('stock_items').select('sku');if(error)return;const have=new Set((data||[]).map(x=>x.sku));const missing=DEFAULT_STOCK.filter(x=>!have.has(x.sku));if(missing.length)await sb.from('stock_items').insert(missing);}
 async function saveRow(row){row.stock=Math.max(0,Number(row.stock||0));row.enabled=!!row.enabled&&row.stock>0;if(sb){const payload={sku:row.sku,type:row.type,category:row.category,name:row.name,stock:row.stock,enabled:row.enabled};const {error}=await sb.from('stock_items').upsert(payload,{onConflict:'sku'});if(!error)return true;}const rows=localRows();const i=rows.findIndex(x=>x.sku===row.sku);if(i>=0)rows[i]=row;else rows.push(row);localStorage.setItem('belostia_v7_stock',JSON.stringify(rows));return true;}
 async function setQty(sku,v){const rows=await getStockRows(),row=rows.find(x=>x.sku===sku);if(!row)return;row.stock=Math.max(0,parseInt(v||0,10));row.enabled=row.stock>0;await saveRow(row);}
