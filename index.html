@@ -43,6 +43,32 @@ function addConfigured(){const c=calc();cart.push({name:wiz.p.name,detail:c.deta
 function quickDrink(c,n,p){c=decodeURIComponent(c);n=decodeURIComponent(n);cart.push({name:n,detail:c,price:p});update();afterAdd();}
 function closeWizard(){overlay.style.display='none';wiz=null;}
 function afterAdd(){overlay.style.display='flex';wizTitle.textContent='Ajouté au panier ✅';wizStep.textContent='Que voulez-vous faire ?';wizBody.innerHTML='<div class="choices"><button class="choice" onclick="closeWizard()">🍕 Continuer à commander</button><button class="choice selected" onclick="closeWizard();openCart()">🛒 Voir le panier / paiement</button></div>';backBtn.style.display='none';nextBtn.style.display='none';}
-function update(){count.textContent=cart.length;total.textContent=euro(cart.reduce((s,x)=>s+x.price,0))}function openCart(){cartModal.style.display='flex';items.innerHTML=cart.length?cart.map((x,i)=>`<div class="row"><div><b>${esc(x.name)}</b><br><small>${esc(x.detail||'')}</small></div><div>${euro(x.price)} <button onclick="cart.splice(${i},1);update();openCart()">Retirer</button></div></div>`).join(''):'Panier vide'}function closeCart(){cartModal.style.display='none'}function checkout(){if(!cart.length)return alert('Panier vide.');if(!customerName.value||!phone.value)return alert('Nom et téléphone requis.');alert('Parcours prêt. Paiement réel à connecter ensuite.');}
+function update(){count.textContent=cart.length;total.textContent=euro(cart.reduce((s,x)=>s+x.price,0))}function openCart(){cartModal.style.display='flex';items.innerHTML=cart.length?cart.map((x,i)=>`<div class="row"><div><b>${esc(x.name)}</b><br><small>${esc(x.detail||'')}</small></div><div>${euro(x.price)} <button onclick="cart.splice(${i},1);update();openCart()">Retirer</button></div></div>`).join(''):'Panier vide'}function closeCart(){cartModal.style.display='none'}async function checkout(){
+  if(!cart.length) return alert("Votre panier est vide.");
+  if(!customerName.value.trim() || !phone.value.trim()) return alert("Nom et téléphone requis.");
+  if(mode.value==="Livraison" && !address.value.trim()) return alert("Adresse de livraison requise.");
+
+  const order={
+    order_number: makeOrderNumber(),
+    status: "pending_payment",
+    fulfillment: mode.value,
+    customer_name: customerName.value.trim(),
+    customer_phone: phone.value.trim(),
+    customer_address: mode.value==="Livraison" ? address.value.trim() : "",
+    customer_note: note.value.trim(),
+    items: cart.map(x=>({name:x.name,detail:x.detail||"",price:Number(x.price||0),qty:1})),
+    total: cart.reduce((s,x)=>s+Number(x.price||0),0)
+  };
+
+  try{
+    const saved=await createOrder(order);
+    const num=saved.order_number||order.order_number;
+    alert("Commande enregistrée : "+num+"\\n\\nStatut : EN ATTENTE DE PAIEMENT.\\nElle ne sera considérée comme payée qu'après connexion de Stripe.");
+    cart=[]; update(); closeCart();
+  }catch(e){
+    console.error(e);
+    alert("Impossible d'enregistrer la commande. Vérifiez la table Supabase 'orders'.");
+  }
+}
 boot();update();
 </script></body></html>

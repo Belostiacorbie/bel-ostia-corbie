@@ -1,6 +1,13 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bel Ostia — Admin V5</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script>
-<style>*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f5f5}main{max-width:1100px;margin:auto;padding:20px 14px}.panel{background:white;border:1px solid #ddd;border-radius:18px;padding:20px;margin-bottom:14px}input,select{padding:10px;border:1px solid #ccc;border-radius:9px}input[type=email],input[type=password]{width:100%;margin:6px 0 12px}.row{display:grid;grid-template-columns:2fr 90px 60px 60px 95px 95px;gap:7px;align-items:center;border-bottom:1px solid #eee;padding:9px 0}.zero{opacity:.5}button{border:0;border-radius:9px;padding:9px;font-weight:bold;cursor:pointer}.primary{background:#a71928;color:white}.dark{background:#171717;color:white}.notice{background:#fff0c7;padding:10px;border-radius:10px;font-size:13px}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}@media(max-width:750px){.row{grid-template-columns:1fr 60px 48px 48px 80px 80px;font-size:12px}}</style></head><body><main>
+<style>*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f5f5}main{max-width:1100px;margin:auto;padding:20px 14px}.panel{background:white;border:1px solid #ddd;border-radius:18px;padding:20px;margin-bottom:14px}input,select{padding:10px;border:1px solid #ccc;border-radius:9px}input[type=email],input[type=password]{width:100%;margin:6px 0 12px}.row{display:grid;grid-template-columns:2fr 90px 60px 60px 95px 95px;gap:7px;align-items:center;border-bottom:1px solid #eee;padding:9px 0}.zero{opacity:.5}button{border:0;border-radius:9px;padding:9px;font-weight:bold;cursor:pointer}.primary{background:#a71928;color:white}.dark{background:#171717;color:white}.notice{background:#fff0c7;padding:10px;border-radius:10px;font-size:13px}.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}@media(max-width:750px){.row{grid-template-columns:1fr 60px 48px 48px 80px 80px;font-size:12px}}
+.ordersGrid{display:grid;gap:12px}.orderCard{border:1px solid #ddd;border-radius:14px;padding:14px;background:#fff}.orderHead{display:flex;justify-content:space-between;gap:10px;align-items:center}.status{font-size:12px;font-weight:bold;padding:5px 8px;border-radius:999px;background:#eee}.orderItems{margin:10px 0;padding:10px;background:#fafafa;border-radius:10px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.toolbar button{padding:10px 12px}.tabbtn.active{background:#a71928;color:#fff}
+@media print{
+  body *{visibility:hidden!important}
+  #ticketPrint,#ticketPrint *{visibility:visible!important}
+  #ticketPrint{position:absolute;left:0;top:0;width:80mm;background:#fff;color:#000;padding:4mm;font-family:monospace}
+}
+</style></head><body><main>
 <div class="panel"><h1>Bel Ostia — Administration V5</h1><div id="notice" class="notice"></div></div>
 <div id="login" class="panel"><h2>Connexion</h2><input id="email" type="email" placeholder="E-mail administrateur"><input id="password" type="password" placeholder="Mot de passe"><button class="primary" onclick="signIn()">Se connecter</button></div>
 <div id="dash" class="panel" style="display:none"><div style="display:flex;justify-content:space-between;align-items:center"><h2>Stocks de tous les produits, viandes et suppléments</h2><button class="dark" onclick="signOut()">Déconnexion</button></div><div class="filters"><select id="filter" onchange="render()"><option value="">Toutes les catégories</option></select></div><div id="list"></div></div>
@@ -11,5 +18,100 @@ async function signIn(){if(connected){const {error}=await sb.auth.signInWithPass
 async function signOut(){if(connected)await sb.auth.signOut();sessionStorage.removeItem("preview");location.reload();}
 async function show(){login.style.display="none";dash.style.display="block";if(connected)await ensureCatalog();rows=await getStockRows();const cats=[...new Set(rows.map(x=>x.category))];filter.innerHTML='<option value="">Toutes les catégories</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");render();}
 function render(){const f=filter.value;const a=f?rows.filter(x=>x.category===f):rows;list.innerHTML=a.map(x=>`<div class="row ${(!x.enabled||x.stock<=0)?'zero':''}"><div><b>${esc(x.name)}</b><br><small>${esc(x.category)}</small></div><input type="number" min="0" value="${x.stock}" onchange='exact(${JSON.stringify(x.sku)},this.value)'><button onclick='plus(${JSON.stringify(x.sku)},1)'>+1</button><button onclick='plus(${JSON.stringify(x.sku)},-1)'>-1</button><button onclick='rupture(${JSON.stringify(x.sku)})'>Rupture</button><button onclick='toggle(${JSON.stringify(x.sku)},${!x.enabled})'>${x.enabled?'Désactiver':'Activer'}</button></div>`).join("")}
-async function refresh(){rows=await getStockRows();render()}async function exact(s,v){await setQty(s,v);await refresh()}async function plus(s,d){await addQty(s,d);await refresh()}async function rupture(s){await setQty(s,0);await refresh()}async function toggle(s,e){await toggleAvailability(s,e);await refresh()}boot();
+async function refresh(){rows=await getStockRows();render()}async function exact(s,v){await setQty(s,v);await refresh()}async function plus(s,d){await addQty(s,d);await refresh()}async function rupture(s){await setQty(s,0);await refresh()}async function toggle(s,e){await toggleAvailability(s,e);await refresh()}
+function showStockTab(){
+  document.getElementById("stockTab")?.classList.add("active");
+  document.getElementById("orderTab")?.classList.remove("active");
+  document.getElementById("ordersPanel").style.display="none";
+  document.getElementById("dash").style.display="block";
+  const list=document.getElementById("list"); if(list) list.style.display="block";
+  const filters=document.querySelector(".filters"); if(filters) filters.style.display="flex";
+}
+async function showOrdersTab(){
+  document.getElementById("stockTab")?.classList.remove("active");
+  document.getElementById("orderTab")?.classList.add("active");
+  document.getElementById("ordersPanel").style.display="block";
+  const list=document.getElementById("list"); if(list) list.style.display="none";
+  const filters=document.querySelector(".filters"); if(filters) filters.style.display="none";
+  await loadOrders();
+}
+function statusLabel(s){
+  return ({
+    pending_payment:"EN ATTENTE DE PAIEMENT",
+    paid:"PAYÉE",
+    preparing:"EN PRÉPARATION",
+    ready:"PRÊTE",
+    completed:"TERMINÉE",
+    cancelled:"ANNULÉE"
+  })[s]||s;
+}
+function fmtDate(v){
+  try{return new Date(v).toLocaleString("fr-FR")}catch(e){return v||""}
+}
+async function loadOrders(){
+  const el=document.getElementById("ordersList");
+  if(!el)return;
+  el.innerHTML="Chargement…";
+  try{
+    const orders=await listOrders();
+    if(!orders.length){el.innerHTML="<div class='notice'>Aucune commande enregistrée.</div>";return;}
+    el.innerHTML=orders.map(o=>{
+      const items=Array.isArray(o.items)?o.items:[];
+      return `<div class="orderCard">
+        <div class="orderHead"><div><b>${esc(o.order_number||("Commande "+o.id))}</b><br><small>${fmtDate(o.created_at)}</small></div><span class="status">${statusLabel(o.status)}</span></div>
+        <div><b>${esc(o.fulfillment||"")}</b> — ${esc(o.customer_name||"")} — ${esc(o.customer_phone||"")}</div>
+        ${o.customer_address?`<div>${esc(o.customer_address)}</div>`:""}
+        <div class="orderItems">${items.map(x=>`<div><b>${x.qty||1}× ${esc(x.name)}</b>${x.detail?`<br><small>${esc(x.detail)}</small>`:""}</div>`).join("<hr>")}</div>
+        <div><b>Total : ${euro(orderTotalEuros(o))}</b></div>
+        <div class="toolbar">
+          <button onclick='printKitchen(${JSON.stringify(o)})'>Ticket cuisine</button>
+          <button onclick='printClient(${JSON.stringify(o)})'>Ticket client</button>
+          ${o.status==="paid"?`<button onclick="setStatus(${JSON.stringify(o.id)},'preparing')">En préparation</button>`:""}
+          ${o.status==="preparing"?`<button onclick="setStatus(${JSON.stringify(o.id)},'ready')">Prête</button>`:""}
+          ${o.status==="ready"?`<button onclick="setStatus(${JSON.stringify(o.id)},'completed')">Terminée</button>`:""}
+        </div>
+      </div>`;
+    }).join("");
+  }catch(e){
+    console.error(e);
+    el.innerHTML="<div class='notice'>Impossible de charger les commandes. Vérifiez la table Supabase « orders ».</div>";
+  }
+}
+async function setStatus(id,status){
+  try{await updateOrderStatus(id,status);await loadOrders()}catch(e){alert("Impossible de modifier le statut.")}
+}
+function ticketHtml(o,kind){
+  const items=Array.isArray(o.items)?o.items:[];
+  const client=kind==="client";
+  return `<div style="font-size:12px;line-height:1.35">
+    <div style="text-align:center;font-size:18px;font-weight:bold">BEL OSTIA</div>
+    <div style="text-align:center">${client?"REÇU CLIENT":"TICKET CUISINE"}</div>
+    <hr>
+    <div><b>${esc(o.order_number||"")}</b></div>
+    <div>${fmtDate(o.created_at)}</div>
+    <div><b>${esc(o.fulfillment||"")}</b></div>
+    <hr>
+    ${items.map(x=>`<div style="margin:8px 0"><b>${x.qty||1} × ${esc(x.name)}</b>${x.detail?`<br>${esc(x.detail)}`:""}${client?`<br>${euro(Number(x.price||0)*(x.qty||1))}`:""}</div>`).join("")}
+    <hr>
+    ${client?`<div><b>TOTAL : ${euro(orderTotalEuros(o))}</b></div>`:""}
+    <div>Client : ${esc(o.customer_name||"")}</div>
+    <div>Tél : ${esc(o.customer_phone||"")}</div>
+    ${o.customer_address?`<div>Adresse : ${esc(o.customer_address)}</div>`:""}
+    ${o.customer_note?`<div><b>Note : ${esc(o.customer_note)}</b></div>`:""}
+    <hr>
+    <div><b>STATUT : ${statusLabel(o.status)}</b></div>
+    ${!client&&o.status!=="paid"&&o.status!=="preparing"&&o.status!=="ready"&&o.status!=="completed"?'<div style="font-size:16px"><b>⚠ NON PAYÉE</b></div>':""}
+  </div>`;
+}
+function doPrint(o,kind){
+  const t=document.getElementById("ticketPrint");
+  t.innerHTML=ticketHtml(o,kind);
+  t.style.display="block";
+  window.print();
+  setTimeout(()=>{t.style.display="none";t.innerHTML=""},300);
+}
+function printKitchen(o){doPrint(o,"kitchen")}
+function printClient(o){doPrint(o,"client")}
+
+boot();
 </script></body></html>

@@ -28,3 +28,75 @@ async function saveRow(row){row.stock=Math.max(0,Number(row.stock||0));row.enabl
 async function setQty(sku,v){const rows=await getStockRows(),row=rows.find(x=>x.sku===sku);if(!row)return;row.stock=Math.max(0,parseInt(v||0,10));row.enabled=row.stock>0;await saveRow(row);}
 async function addQty(sku,d){const rows=await getStockRows(),row=rows.find(x=>x.sku===sku);if(!row)return;row.stock=Math.max(0,Number(row.stock||0)+d);row.enabled=row.stock>0;await saveRow(row);}
 async function toggleAvailability(sku,e){const rows=await getStockRows(),row=rows.find(x=>x.sku===sku);if(!row)return;row.enabled=!!e;if(row.enabled&&row.stock<=0)row.stock=1;await saveRow(row);}
+
+
+// =========================
+// COMMANDES / TICKETS V8
+// =========================
+function makeOrderNumber(){
+  const d=new Date();
+  const pad=n=>String(n).padStart(2,"0");
+  return "BO-"+d.getFullYear().toString().slice(-2)+pad(d.getMonth()+1)+pad(d.getDate())+"-"+Math.floor(1000+Math.random()*9000);
+}
+
+async function createOrder(order){
+  // Sans Stripe, une commande créée ici reste "pending_payment".
+  // Elle ne doit jamais être considérée comme payée automatiquement.
+  if(sb){
+    const payload={
+      order_number: order.order_number,
+      status: order.status || "pending_payment",
+      fulfillment: order.fulfillment || "Livraison",
+      customer_name: order.customer_name || "",
+      customer_phone: order.customer_phone || "",
+      customer_address: order.customer_address || "",
+      customer_note: order.customer_note || "",
+      items: order.items || [],
+      total_cents: Math.round(Number(order.total||0)*100),
+      payment_provider: order.payment_provider || null,
+      payment_reference: order.payment_reference || null
+    };
+    const {data,error}=await sb.from("orders").insert(payload).select("*").single();
+    if(error) throw error;
+    return data;
+  }
+
+  // Mode secours local pour tester l'interface sans backend.
+  const all=JSON.parse(localStorage.getItem("belostia_v8_orders")||"[]");
+  const saved={
+    id: Date.now(),
+    created_at: new Date().toISOString(),
+    ...order,
+    total_cents: Math.round(Number(order.total||0)*100)
+  };
+  all.unshift(saved);
+  localStorage.setItem("belostia_v8_orders",JSON.stringify(all));
+  return saved;
+}
+
+async function listOrders(){
+  if(sb){
+    const {data,error}=await sb.from("orders").select("*").order("created_at",{ascending:false}).limit(100);
+    if(error) throw error;
+    return data||[];
+  }
+  return JSON.parse(localStorage.getItem("belostia_v8_orders")||"[]");
+}
+
+async function updateOrderStatus(id,status){
+  if(sb){
+    const {error}=await sb.from("orders").update({status}).eq("id",id);
+    if(error) throw error;
+    return true;
+  }
+  const all=JSON.parse(localStorage.getItem("belostia_v8_orders")||"[]");
+  const x=all.find(o=>String(o.id)===String(id));
+  if(x)x.status=status;
+  localStorage.setItem("belostia_v8_orders",JSON.stringify(all));
+  return true;
+}
+
+function orderTotalEuros(order){
+  if(order.total_cents!==undefined && order.total_cents!==null) return Number(order.total_cents)/100;
+  return Number(order.total||0);
+}
