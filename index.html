@@ -23,7 +23,9 @@ button{border:0;border-radius:11px;padding:11px;font-weight:800;cursor:pointer}.
 <div class="admin"><a href="admin.html">Accès administration</a></div></main>
 <button class="cart" onclick="openCart()">🛒 <span id="count">0</span> • <span id="total">0,00 €</span></button>
 <div class="modal" id="modal"><div class="sheet"><div style="display:flex;justify-content:space-between"><h2>Panier</h2><button onclick="closeCart()">✕</button></div><div id="items"></div>
-<select id="mode"><option>Livraison</option><option>À emporter</option></select><input id="customerName" placeholder="Nom et prénom"><input id="phone" placeholder="Téléphone"><input id="address" placeholder="Adresse"><textarea id="note" placeholder="Instructions"></textarea><button class="pay" style="width:100%" onclick="checkout()">Continuer</button></div></div>
+<div class="notice"><b>Une petite envie en plus ? 🍰🥤</b><br>
+    Pensez à ajouter un dessert ou une boisson avant de valider.</div>
+    <select id="mode"><option>Livraison</option><option>À emporter</option></select><input id="customerName" placeholder="Nom et prénom"><input id="phone" placeholder="Téléphone"><input id="address" placeholder="Adresse"><textarea id="note" placeholder="Instructions"></textarea><button class="pay" style="width:100%" onclick="checkout()">Continuer</button></div></div>
 <script src="shared.js"></script><script>
 let stock=[],cart=[];const cats=["Pizzas sauce tomate","Pizzas crème fraîche","Burgers","Sandwichs","Tacos","Paninis","Salades","Tex-Mex","Boissons","Desserts & glaces"];
 const slug=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-");
@@ -60,7 +62,13 @@ function addDrink(cat,name){const x=stock.find(r=>r.type==="drink"&&r.category==
 function addMenu(i){const p=MENU[i];let price=p.price,detail="";
  if(p.sizes){const el=document.getElementById("size"+i);if(!el||!el.value)return alert("Aucune taille disponible.");const [s,v]=el.value.split("|");detail=s;price=+v;}
  if(p.meatCount){const m=[...document.querySelectorAll(".m"+i+":checked")].map(x=>x.value);if(m.length!==p.meatCount)return alert("Choisissez exactement "+p.meatCount+" viande(s).");detail=m.join(", ");}
- cart.push({name:p.name,detail,price});update();}
+ if(["Burgers","Sandwichs","Paninis"].includes(p.cat)){
+   const enMenu=confirm("Voulez-vous prendre ce produit en MENU ?\n\nOK = En menu\nAnnuler = Produit seul");
+   if(enMenu) detail+=(detail?" • ":"")+"EN MENU";
+ }
+ cart.push({name:p.name,detail,price});update();
+ setTimeout(()=>alert("🍰🥤 Une petite envie en plus ? Pensez à ajouter un dessert ou une boisson !"),150);
+}
 function update(){count.textContent=cart.length;total.textContent=euro(cart.reduce((s,x)=>s+x.price,0))}
 function openCart(){modal.style.display="flex";items.innerHTML=cart.length?cart.map((x,i)=>`<div class="row"><div><b>${esc(x.name)}</b><br><small>${esc(x.detail||"")}</small></div><div>${euro(x.price)} <button onclick="cart.splice(${i},1);update();openCart()">Retirer</button></div></div>`).join(""):"Panier vide"}
 function closeCart(){modal.style.display="none"}function checkout(){if(!cart.length)return alert("Panier vide.");if(!customerName.value||!phone.value)return alert("Nom et téléphone requis.");alert("V5 prête. Paiement et décrémentation automatique du stock seront branchés ensuite.");}
