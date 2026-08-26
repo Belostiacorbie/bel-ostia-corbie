@@ -56,9 +56,12 @@ async function createOrder(order){
       payment_provider: order.payment_provider || null,
       payment_reference: order.payment_reference || null
     };
-    const {data,error}=await sb.from("orders").insert(payload).select("*").single();
-    if(error) throw error;
-    return data;
+    const {error}=await sb.from("orders").insert(payload);
+if(error) throw error;
+return {
+  ...payload,
+  created_at: new Date().toISOString()
+};
   }
 
   // Mode secours local pour tester l'interface sans backend.
