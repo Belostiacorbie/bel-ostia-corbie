@@ -63,8 +63,16 @@ function update(){count.textContent=cart.length;total.textContent=euro(cart.redu
   try{
     const saved=await createOrder(order);
     const num=saved.order_number||order.order_number;
-    alert("Commande enregistrée : "+num+"\\n\\nStatut : EN ATTENTE DE PAIEMENT.\\nElle ne sera considérée comme payée qu'après connexion de Stripe.");
-    cart=[]; update(); closeCart();
+
+    const {data, error: checkoutError} = await sb.functions.invoke(
+      "create-checkout-session",
+      {body:{order_number:num}}
+    );
+
+    if(checkoutError) throw checkoutError;
+    if(!data || !data.url) throw new Error("Stripe n'a pas renvoyé d'URL de paiement.");
+
+    window.location.href = data.url;
   }catch(e){
     console.error(e);
     alert("Impossible d'enregistrer la commande. Vérifiez la table Supabase 'orders'.");
