@@ -75,8 +75,9 @@ async function showOrdersTab(){
 }
 function statusLabel(s){
   return ({
-    pending_payment:"EN ATTENTE DE PAIEMENT",
-    paid:"PAYÉE",
+    new:"NOUVELLE",
+    pending_payment:"NOUVELLE",
+    paid:"NOUVELLE",
     preparing:"EN PRÉPARATION",
     ready:"PRÊTE",
     completed:"TERMINÉE",
@@ -97,14 +98,14 @@ async function loadOrders(){
       const items=Array.isArray(o.items)?o.items:[];
       return `<div class="orderCard">
         <div class="orderHead"><div><b>${esc(o.order_number||("Commande "+o.id))}</b><br><small>${fmtDate(o.created_at)}</small></div><span class="status">${statusLabel(o.status)}</span></div>
-        <div><b>${esc(o.fulfillment||"")}</b> — ${esc(o.customer_name||"")} — ${esc(o.customer_phone||"")}</div>
+        <div><b>${esc(o.fulfillment||"")}</b> — ${esc(o.customer_name||"")} — ${esc(o.customer_phone||"")}</div><div style="margin-top:7px"><b>Règlement :</b> ${esc(paymentMethodLabel(o.payment_method||((o.payment_provider==="stripe")?"online":"")))} — <b>${esc(paymentStatusLabel(o.payment_status||((o.status==="paid")?"paid":"pending")))}</b></div>
         ${o.customer_address?`<div>${esc(o.customer_address)}</div>`:""}
         <div class="orderItems">${items.map(x=>`<div><b>${x.qty||1}× ${esc(x.name)}</b>${x.detail?`<br><small>${esc(x.detail)}</small>`:""}</div>`).join("<hr>")}</div>
         <div><b>Total : ${euro(orderTotalEuros(o))}</b></div>
         <div class="toolbar">
           <button onclick='printKitchen(${JSON.stringify(o)})'>Ticket cuisine</button>
           <button onclick='printClient(${JSON.stringify(o)})'>Ticket client</button>
-          ${o.status==="paid"?`<button onclick="setStatus(${JSON.stringify(o.id)},'preparing')">En préparation</button>`:""}
+          ${["new","pending_payment","paid"].includes(o.status)?`<button onclick="setStatus(${JSON.stringify(o.id)},'preparing')">En préparation</button>`:""}
           ${o.status==="preparing"?`<button onclick="setStatus(${JSON.stringify(o.id)},'ready')">Prête</button>`:""}
           ${o.status==="ready"?`<button onclick="setStatus(${JSON.stringify(o.id)},'completed')">Terminée</button>`:""}
         </div>
@@ -137,8 +138,7 @@ function ticketHtml(o,kind){
     ${o.customer_address?`<div>Adresse : ${esc(o.customer_address)}</div>`:""}
     ${o.customer_note?`<div><b>Note : ${esc(o.customer_note)}</b></div>`:""}
     <hr>
-    <div><b>STATUT : ${statusLabel(o.status)}</b></div>
-    ${!client&&o.status!=="paid"&&o.status!=="preparing"&&o.status!=="ready"&&o.status!=="completed"?'<div style="font-size:16px"><b>⚠ NON PAYÉE</b></div>':""}
+    <div><b>STATUT CUISINE : ${statusLabel(o.status)}</b></div><div><b>RÈGLEMENT : ${paymentMethodLabel(o.payment_method||((o.payment_provider==="stripe")?"online":""))}</b></div><div><b>PAIEMENT : ${paymentStatusLabel(o.payment_status||((o.status==="paid")?"paid":"pending"))}</b></div>${(o.payment_status||((o.status==="paid")?"paid":"pending"))!=="paid"?'<div style="font-size:16px"><b>⚠ À ENCAISSER</b></div>':""}
   </div>`;
 }
 function doPrint(o,kind){
